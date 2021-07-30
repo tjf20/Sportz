@@ -30,4 +30,5 @@ export default function useCachedResources() {
   }, []);
 
   return isLoadingComplete;
+
 }
