@@ -5,9 +5,46 @@ orbs:
   # Declare a dependency on the welcome-orb
   welcome: circleci/welcome-orb@0.4.1
 # Orchestrate or schedule a set of jobs
+
+publish: &publish
+  working_directory: ~/sportz
+  docker:
+    - image: circleci/node:10.4.1
+  steps:
+    - checkout
+
+    - run:
+        name: Installing dependencies
+        command: npm ci
+
+    - run:
+        name: Login into Expo
+        command: npx expo-cli login -u tjf20 -p mcfly3809
+
+    - run:
+        name: Publish to Expo
+        command: npx expo-cli publish --non-interactive --max-workers 1 --release-channel $EXPO_RELEASE_CHANNEL
+
+jobs:
+  publish_to_expo_dev:
+    environment:
+      EXPO_RELEASE_CHANNEL: dev
+    <<: *publish
+
+  publish_to_expo_prod:
+    environment:
+      EXPO_RELEASE_CHANNEL: default
+    <<: *publish
+
 workflows:
-  # Name the workflow "welcome"
-  welcome:
-    # Run the welcome/run job in its own container
+  version: 2.1
+  sportz:
     jobs:
-      - welcome/run
+      - publish_to_expo_dev:
+          filters:
+            branches:
+              only: development
+      - publish_to_expo_prod:
+          filters:
+            branches:
+              only: master
