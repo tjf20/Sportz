@@ -1,49 +1,28 @@
-# This config is equivalent to both the '.circleci/extended/orb-free.yml' and the base '.circleci/config.yml'
 version: 2.1
 
-orbs:
-  node: circleci/node@4.1
-
-
-publish: &publish
-  working_directory: ~/sportz
-  docker:
-    - image: circleci/node:10.4.1
-  steps:
-    - checkout
-
-    - run:
-        name: Installing dependencies
-        command: npm ci
-
-    - run:
-        name: Login into Expo
-        command: npx expo-cli login -u tjf20 -p mcfly3809
-
-    - run:
-        name: Publish to Expo
-        command: npx expo-cli publish --non-interactive --max-workers 1 --release-channel $EXPO_RELEASE_CHANNEL
-
 jobs:
-  publish_to_expo_dev:
-    environment:
-      EXPO_RELEASE_CHANNEL: dev
-    <<: *publish
-
-  publish_to_expo_prod:
-    environment:
-      EXPO_RELEASE_CHANNEL: default
-    <<: *publish
+  test:
+    docker:
+      - image: cimg/node:15.1
+    steps:
+      - checkout
+      - restore_cache:
+          # See the configuration reference documentation for more details on using restore_cache and save_cache steps
+          # https://circleci.com/docs/2.0/configuration-reference/?section=reference#save_cache
+          keys:
+            - node-deps-v1-{{ .Branch }}-{{checksum "package-lock.json"}}
+      - run:
+          name: install packages
+          command: npm ci
+      - save_cache:
+          key: node-deps-v1-{{ .Branch }}-{{checksum "package-lock.json"}}
+          paths:
+            - ~/.npm
+      - run:
+          name: Run Tests
+          command: npm run test
 
 workflows:
-  version: 2.1
-  my_app:
+  orb-free-workflow:
     jobs:
-      - publish_to_expo_dev:
-          filters:
-            branches:
-              only: development
-      - publish_to_expo_prod:
-          filters:
-            branches:
-              only: master
+      - test
