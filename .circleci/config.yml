@@ -1,6 +1,11 @@
-version: 2
+# This config is equivalent to both the '.circleci/extended/orb-free.yml' and the base '.circleci/config.yml'
+version: 2.1
+
+orbs:
+  node: circleci/node@4.1
+
 publish: &publish
-  working_directory: ~/my-app
+  working_directory: ~/sportz
   docker:
     - image: circleci/node:10.4.1
   steps:
@@ -30,7 +35,7 @@ jobs:
     <<: *publish
 
 workflows:
-  version: 2
+  version: 2.1
   my_app:
     jobs:
       - publish_to_expo_dev:
